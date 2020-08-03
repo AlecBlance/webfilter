@@ -6,7 +6,6 @@ WebFilter is a python program for filtering large list of websites or subdomains
 * Status code
 * Response length
 
-> Next update: Multiple status code filter and response length
 
 ## Installation
 ```bash
