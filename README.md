@@ -9,7 +9,7 @@ WebFilter is a python program for filtering large list of websites or subdomains
 
 ## Installation
 ```bash
-git clone https://github.com/AlecBlance/WikiBot.git
+git clone https://github.com/AlecBlance/webfilter.git
 ```
 
 ## Usage
@@ -25,8 +25,8 @@ python3 webfilter.py -s google.txt -fc 404 301 302
 ```
 With filter of **response length**
 ```bash
-python3 webfilter -s google.txt -fs 1231
-python3 webfilter -s google.txt -fs 1231 4512
+python3 webfilter.py -s google.txt -fs 1231
+python3 webfilter.py -s google.txt -fs 1231 4512
 ```
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
