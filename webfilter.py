@@ -5,8 +5,8 @@ import os
 import concurrent.futures
 import re
 
-SIZE = ""
-CODE = ""
+SIZE = []
+CODE = []
 
 def validate(url):
     pattern = '(.*)\\:\\/\\/'
@@ -14,16 +14,17 @@ def validate(url):
         return 'http://'+url
 
 def filter(sub):
+    sub = sub.strip('\n')
     isPrint = False
     req = requests.get(validate(sub), stream=True)
     req_code = req.status_code
     req_size = len(req.raw.read())
     if SIZE and CODE:
-        if req_size != SIZE and req_code != CODE:
+        if req_size not in SIZE and req_code not in CODE:
             isPrint = True
-    elif SIZE and req_size != SIZE:
+    elif SIZE and req_size not in SIZE:
         isPrint = True
-    elif CODE and req_code != CODE:
+    elif CODE and req_code not in CODE:
         isPrint = True
     elif not SIZE and not CODE:
         isPrint = True 
@@ -31,17 +32,14 @@ def filter(sub):
         print(f'[Code:{req.status_code}, Size: {req_size}]',sub)
 
 def toList(file) :
-    subdomainList = []
     with open(file) as subs:
-        for sub in subs:
-            subdomainList.append(sub.strip('\n'))
-    return subdomainList
+        return subs.readlines()
 
 def args():
     parser = argparse.ArgumentParser(epilog=f'Example: python3 {sys.argv[0]} -s google.txt')
     parser.add_argument('-s', '--subdomains', help='List of subdomains', required=True)
-    parser.add_argument('-fs', '--filter-size', help='Filter HTTP response size', default=False, type=int)
-    parser.add_argument('-fc', '--filter-code', help='Filter HTTP status codes from response', default=False, type=int)
+    parser.add_argument('-fs', '--filter-size', help='Filter HTTP response size', default=False, nargs='+', type=int)
+    parser.add_argument('-fc', '--filter-code', help='Filter HTTP status codes from response', default=False, nargs='+', type=int)
     parser.add_argument('-t', '--threads', help='Threads of requests', default=10, type=int)
     return parser.parse_args()
 
