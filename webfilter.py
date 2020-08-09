@@ -2,34 +2,36 @@ import requests
 import sys 
 import argparse
 import os
-import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 import re
-
-SIZE = []
-CODE = []
 
 def validate(url):
     pattern = '(.*)\\:\\/\\/'
     if re.match(pattern, url) is None:
         return 'http://'+url
 
-def filter(sub):
+def filter(sub, size, code, verbose, clean):
     sub = sub.strip('\n')
     isPrint = False
+    if verbose:
+        print(f'Getting {sub}')
     req = requests.get(validate(sub), stream=True)
     req_code = req.status_code
     req_size = len(req.raw.read())
-    if SIZE and CODE:
-        if req_size not in SIZE and req_code not in CODE:
+    if size and code:
+        if req_size not in size and req_code not in code:
             isPrint = True
-    elif SIZE and req_size not in SIZE:
+    elif size and req_size not in size:
         isPrint = True
-    elif CODE and req_code not in CODE:
+    elif code and req_code not in code:
         isPrint = True
-    elif not SIZE and not CODE:
+    elif not size and not code:
         isPrint = True 
     if isPrint:
-        print(f'[Code:{req.status_code}, Size: {req_size}]',sub)
+        result = ''
+        if not clean:
+            result = f'[Code:{req.status_code}, Size: {req_size}] '
+        print(result + sub)
 
 def toList(file) :
     with open(file) as subs:
@@ -41,19 +43,23 @@ def args():
     parser.add_argument('-fs', '--filter-size', help='Filter HTTP response size', default=False, nargs='+', type=int)
     parser.add_argument('-fc', '--filter-code', help='Filter HTTP status codes from response', default=False, nargs='+', type=int)
     parser.add_argument('-t', '--threads', help='Threads of requests', default=10, type=int)
+    parser.add_argument('-v', '--verbose', help='Show the process', action='store_true')
+    parser.add_argument('-c', '--clean', help='No code and size in output', action='store_true')
     return parser.parse_args()
 
 def main():
-    global SIZE, CODE
     arg = args()
     if not os.path.exists(arg.subdomains):
         print('[ERROR] Please enter a valid path of list of subdomains')
         return
-    SIZE = arg.filter_size
-    CODE = arg.filter_code
+    size = arg.filter_size
+    code = arg.filter_code
+    verbose = arg.verbose
+    clean = arg.clean
     subdomainList = toList(arg.subdomains)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=arg.threads) as executor:
-        executor.map(filter, subdomainList)
+    with ThreadPoolExecutor(max_workers=arg.threads) as executor:
+        for sub in subdomainList: 
+            executor.submit(filter, sub, size, code, verbose, clean)
 
 if __name__ == '__main__':
     main()
