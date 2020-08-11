@@ -8,30 +8,23 @@ import re
 def validate(url):
     pattern = '(.*)\\:\\/\\/'
     if re.match(pattern, url) is None:
-        return 'http://'+url
+        url = 'http://'+url
+    return url
 
 def filter(sub, size, code, verbose, clean):
     sub = sub.strip('\n')
-    isPrint = False
     if verbose:
         print(f'Getting {sub}')
     req = requests.get(validate(sub), stream=True)
     req_code = req.status_code
     req_size = len(req.raw.read())
-    if size and code:
-        if req_size not in size and req_code not in code:
-            isPrint = True
-    elif size and req_size not in size:
-        isPrint = True
-    elif code and req_code not in code:
-        isPrint = True
-    elif not size and not code:
-        isPrint = True 
-    if isPrint:
-        result = ''
-        if not clean:
-            result = f'[Code:{req.status_code}, Size: {req_size}] '
-        print(result + sub)
+    if size and code and req_size in size and req_code in code: return
+    if size and req_size in size: return 
+    if code and req_code in code: return
+    result = ''
+    if not clean:
+        result = f'[Code:{req.status_code}, Size: {req_size}] '
+    print(result + sub)
 
 def toList(file) :
     with open(file) as subs:
