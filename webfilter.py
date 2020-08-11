@@ -11,7 +11,7 @@ def validate(url):
         url = 'http://'+url
     return url
 
-def filter(sub, size, code, verbose, clean):
+def filter(sub, size, code, verbose, clean, ic, iss):
     sub = sub.strip('\n')
     if verbose:
         print(f'Getting {sub}')
@@ -21,6 +21,8 @@ def filter(sub, size, code, verbose, clean):
     if size and code and req_size in size and req_code in code: return
     if size and req_size in size: return 
     if code and req_code in code: return
+    if ic and req_code not in ic: return
+    if iss and req_size not in iss: return
     result = ''
     if not clean:
         result = f'[Code:{req.status_code}, Size: {req_size}] '
@@ -33,11 +35,13 @@ def toList(file) :
 def args():
     parser = argparse.ArgumentParser(epilog=f'Example: python3 {sys.argv[0]} -s google.txt')
     parser.add_argument('-s', '--subdomains', help='List of subdomains', required=True)
-    parser.add_argument('-fs', '--filter-size', help='Filter HTTP response size', default=False, nargs='+', type=int)
-    parser.add_argument('-fc', '--filter-code', help='Filter HTTP status codes from response', default=False, nargs='+', type=int)
+    parser.add_argument('-fs', '--filter-size', help='Filter HTTP response size', nargs='+', type=int)
+    parser.add_argument('-fc', '--filter-code', help='Filter HTTP status codes from response', nargs='+', type=int)
     parser.add_argument('-t', '--threads', help='Threads of requests', default=10, type=int)
     parser.add_argument('-v', '--verbose', help='Show the process', action='store_true')
     parser.add_argument('-c', '--clean', help='No code and size in output', action='store_true')
+    parser.add_argument('-ic', '--include-code', help='Show only specific status codes', nargs='+', type=int)
+    parser.add_argument('-is', '--include-size', help='Show only specific response size', nargs='+', type=int)
     return parser.parse_args()
 
 def main():
@@ -49,10 +53,12 @@ def main():
     code = arg.filter_code
     verbose = arg.verbose
     clean = arg.clean
+    ic = arg.include_code
+    iss = arg.include_size
     subdomainList = toList(arg.subdomains)
     with ThreadPoolExecutor(max_workers=arg.threads) as executor:
         for sub in subdomainList: 
-            executor.submit(filter, sub, size, code, verbose, clean)
+            executor.submit(filter, sub, size, code, verbose, clean, ic, iss)
 
 if __name__ == '__main__':
     main()
